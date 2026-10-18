@@ -1,0 +1,9 @@
+f)
+
+direction,eps_x,eps_y,eps_theta
+ccw,-0.00667,0.00670,-0.006836
+cw,-0.00679,-0.00691,0.006844
+
+Before calibration, the robot suffered from two major systematic errors: a track-width mismatch (b) that caused a turn overshoot, and a wheel radius mismatch (rL not equal to rR) that caused a leg curvature. These systematic errors caused the square trajectory to distort and drift by tens of centimeters. Correcting b and individual radii via UMBmark and the scale test effectively reduced these systematic biases to zero.
+
+Because all deterministic geometric biases have been removed, the remaining error is caused entirely by non-systematic physical simulation dynamics that kinematic dead reckoning cannot model such as wheel acceleration skid and inertial slip, drag and frictional forces, and controller thresholds in umbmark_driver.py. This residual of less than a cm over an 8m total perimeter confirms that the UMBmark and scale calibration procedure successfully tuned the odometry model to the physical limits of the vehicle. 

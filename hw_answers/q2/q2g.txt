@@ -1,0 +1,32 @@
+void DiffDrivePrivate::UpdateVelocity(const UpdateInfo &_info,
+    const EntityComponentManager &/*_ecm*/)
+{
+  GZ_PROFILE("DiffDrive::UpdateVelocity");
+
+  double linVel;
+  double angVel;
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    linVel = this->targetVel.linear().x();
+    angVel = this->targetVel.angular().z();
+  }
+
+  // Limit the target velocity if needed.
+  this->limiterLin->Limit(
+      linVel, this->last0Cmd.lin, this->last1Cmd.lin, _info.dt);
+  this->limiterAng->Limit(
+      angVel, this->last0Cmd.ang, this->last1Cmd.ang, _info.dt);
+
+  // Update history of commands.
+  this->last1Cmd = last0Cmd;
+  this->last0Cmd.lin = linVel;
+  this->last0Cmd.ang = angVel;
+
+  // Convert the target velocities to joint velocities.
+  this->rightJointSpeed =
+    (linVel + angVel * this->wheelSeparation / 2.0) / this->wheelRadius;
+  this->leftJointSpeed =
+    (linVel - angVel * this->wheelSeparation / 2.0) / this->wheelRadius;
+}
+
+

@@ -1,0 +1,39 @@
+c)
+
+/odom_exact:
+pose:
+    position:
+      x: 0.3992508432792088
+      y: 0.08210218917811808
+      z: 0.0
+    orientation:
+      x: 0.0
+      y: 0.0
+      z: 0.20142576105156068
+      w: 0.9795037839563457
+
+/odom_euler:
+pose:
+    position:
+      x: 0.3992589932045065
+      y: 0.08206273137404008
+      z: 0.0
+    orientation:
+      x: 0.0
+      y: 0.0
+      z: 0.20142576105156068
+      w: 0.9795037839563457
+
+/ground_truth/odom:
+pose:
+    position:
+      x: 0.39936679673734843
+      y: 0.08023609946443445
+      z: 0.0
+    orientation:
+      x: -7.486351571955253e-10
+      y: 1.8461122879818756e-09
+      z: 0.2010368777813955
+      w: 0.97958367369608
+
+We know that error for any integration scheme depends directly on delta theta = omega x delta t. Gazebo's JointStatePublisher publishes at the physics step rate of 1000Hz. Therefore, Over the run, the discrepancy between Euler and Exact is very less at very high sensor update rates (1 kHz). The algorithmic error remains orders of magnitude smaller than the physical discrepancies between odometry and ground truth, confirming the lecture takeaway that integration scheme errors are the least significant contributor to dead-reckoning error when sampling frequencies are sufficiently high.

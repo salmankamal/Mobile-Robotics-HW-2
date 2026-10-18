@@ -1,0 +1,11 @@
+properties.xacro (14:27): Defines every physical and kinematic dimension of the robot once including: chassis, wheel, caster, and sensor parameters.
+
+a2_bot.urdf.xacro (24:25): Constructs the complete URDF robot model by defining the visual, collision, and joint relationships between links like the chassis, wheels, caster, and LiDAR.
+
+a2_bot.gazebo.xacro (30:28): Configures all Gazebo elements, such as surface friction and the simulation plugins for differential drive, joint-state publishing, odometry ground truth, and LiDAR sensing.
+
+bridge.yaml (34:30): Specifies the bidirectional topic mappings and message types that bridge communication between the Gazebo transport bus and ROS2.
+
+a2_arena.sdf (40:18): Describes the 12 m × 12 m enclosed simulation environment featuring a doorway and buttress where the robot operates.
+
+sim.launch.py (37:21): Serves as the primary entry point to launch Gazebo Harmonic, spawn the robot model, start the ROS–Gazebo bridge, and open RViz.

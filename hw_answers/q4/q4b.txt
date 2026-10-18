@@ -1,0 +1,49 @@
+b)
+
+"Your node should beat the plugin; explain why."
+
+The Gazebo DiffDrive plugin is hardcoded to accept only a single nominal wheel radius. It assumes both wheels are identical. Consequently, when the wheels rotate equally during a straight command, the plugin computes that the left and right wheel displacements are the same, falsely reporting that the robot drove in a perfect square.   
+
+The new node integrates wheel travel using the distinct physical radii. Even though the commands were identical, our node would compute separate correct left and right wheel displacements and identify that the left wheel has a larger displacement due to a larger radius, correctly tracking the clockwise curvature during every straight run and accumulating the true angular drift. As a result, /odom_own reports an end pose that accurately tracks the path, instead of the plugin's false report.   
+
+ros2 run a2_description odometry_node.py --ros-args -p use_sim_time:=true \
+  -p r_left:=0.048082 -p r_right:=0.047918 -p b:=0.287 -p method:=exact
+[INFO] [1792320238.887614053] [odometry_node]: OdometryNode running with method=exact, r_L=0.048082, r_R=0.047918, b=0.2870
+
+
+/odom_own:
+pose:
+    position:
+      x: -0.08753078112809184
+      y: 0.10279365907595191
+      z: 0.0
+    orientation:
+      x: 0.0
+      y: 0.0
+      z: -0.048630607984612925
+      w: 0.998816832040313
+
+/odom:
+pose:
+    position:
+      x: 0.0036181372307082845
+      y: 0.002182447342410804
+      z: 0.0
+    orientation:
+      x: -0.0
+      y: 0.0
+      z: 0.0010926533829243648
+      w: -0.9999994030541143
+
+/ground_truth/odom:
+pose:
+    position:
+      x: -0.09845381655372185
+      y: 0.11584113156601122
+      z: 0.0
+    orientation:
+      x: -1.7798686775833256e-09
+      y: -3.863807613903073e-09
+      z: -0.0542807461919027
+      w: 0.9985257135361363
+
