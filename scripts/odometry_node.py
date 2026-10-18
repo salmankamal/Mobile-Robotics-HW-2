@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import math
 import rclpy
 from rclpy.node import Node
@@ -11,7 +10,7 @@ class OdometryNode(Node):
     def __init__(self):
         super().__init__('odometry_node')
 
-        # ----------------- Parameters -----------------
+        # Parameters
         self.declare_parameter('r_left', 0.048082)
         self.declare_parameter('r_right', 0.047918)
         self.declare_parameter('b', 0.287)
@@ -22,7 +21,7 @@ class OdometryNode(Node):
         self.b = float(self.get_parameter('b').value)
         self.method = str(self.get_parameter('method').value).lower()
 
-        # ----------------- State -----------------
+        # State
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
@@ -35,11 +34,11 @@ class OdometryNode(Node):
         self.left_joint_name = 'left_wheel_joint'
         self.right_joint_name = 'right_wheel_joint'
 
-        # ----------------- Publishers & TF -----------------
+        # Publishers and TF
         self.odom_pub = self.create_publisher(Odometry, '/odom_own', 10)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
-        # ----------------- Subscription -----------------
+        # Subscription
         self.create_subscription(JointState, '/joint_states', self.joint_state_cb, 10)
 
         self.get_logger().info(
@@ -48,7 +47,7 @@ class OdometryNode(Node):
         )
 
     def joint_state_cb(self, msg: JointState):
-        # 1. Find joint indices by name
+        # Find joint indices by name
         try:
             left_idx = msg.name.index(self.left_joint_name)
             right_idx = msg.name.index(self.right_joint_name)
@@ -58,14 +57,14 @@ class OdometryNode(Node):
         phi_L = msg.position[left_idx]
         phi_R = msg.position[right_idx]
 
-        # 2. Initialize on first message
+        # Initialize on first message
         if not self.initialized:
             self.prev_phi_L = phi_L
             self.prev_phi_R = phi_R
             self.initialized = True
             return
 
-        # 3. Compute joint displacement and wheel arc lengths
+        # Compute joint displacement and wheel arc lengths
         d_phi_L = phi_L - self.prev_phi_L
         d_phi_R = phi_R - self.prev_phi_R
         self.prev_phi_L = phi_L
@@ -78,26 +77,22 @@ class OdometryNode(Node):
         ds = 0.5 * (ds_R + ds_L)
         dtheta = (ds_R - ds_L) / self.b
 
-        # 4. Integrate pose using chosen scheme (from class slides 28-38)
+        # Integrate pose using chosen scheme (from class slides 28-38)
         theta_k = self.theta
 
         if self.method == 'euler':
-            # Euler / Rectangular: Heading frozen at start
             self.x += ds * math.cos(theta_k)
             self.y += ds * math.sin(theta_k)
             self.theta += dtheta
 
         elif self.method == 'rk2' or self.method == 'midpoint':
-            # Midpoint / RK2: Heading at halfway direction
             mid_theta = theta_k + 0.5 * dtheta
             self.x += ds * math.cos(mid_theta)
             self.y += ds * math.sin(mid_theta)
             self.theta += dtheta
 
         elif self.method == 'exact':
-            # Exact circular arc integration
             if abs(dtheta) < 1e-6:
-                # Limit as dtheta -> 0 converges to RK2 (sinc -> 1)
                 mid_theta = theta_k + 0.5 * dtheta
                 self.x += ds * math.cos(mid_theta)
                 self.y += ds * math.sin(mid_theta)
@@ -109,15 +104,14 @@ class OdometryNode(Node):
             self.theta += dtheta
 
         elif self.method == 'trapezoidal':
-            # Trapezoidal: Average of start and end heading directions
             self.x += 0.5 * ds * (math.cos(theta_k) + math.cos(theta_k + dtheta))
             self.y += 0.5 * ds * (math.sin(theta_k) + math.sin(theta_k + dtheta))
             self.theta += dtheta
 
-        # Normalize heading to [-pi, pi]
+        # Normalize heading
         self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
 
-        # 5. Publish Odometry and TF
+        # Publish Odometry and TF
         qz = math.sin(self.theta * 0.5)
         qw = math.cos(self.theta * 0.5)
 
@@ -135,7 +129,7 @@ class OdometryNode(Node):
         odom_msg.pose.pose.orientation.w = qw
         self.odom_pub.publish(odom_msg)
 
-        # odom -> base_link transform
+        # odom to base_link transform
         t = TransformStamped()
         t.header.stamp = msg.header.stamp
         t.header.frame_id = 'odom'

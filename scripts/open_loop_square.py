@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import math
 import csv
 import rclpy
@@ -11,8 +10,7 @@ class OpenLoopSquare(Node):
     def __init__(self):
         super().__init__('open_loop_square')
 
-        # ----------------- Parameters -----------------
-        # Side length L (m), speed v (m/s), turn rate w (rad/s), direction (ccw or cw)
+        # Parameters
         self.declare_parameter('side_length', 1.0)
         self.declare_parameter('speed', 0.2)
         self.declare_parameter('turn_rate', 0.5)
@@ -25,24 +23,19 @@ class OpenLoopSquare(Node):
         self.direction = str(self.get_parameter('direction').value).lower()
         self.csv_path = str(self.get_parameter('csv_filename').value)
 
-        # Angular velocity sign: CCW is +w, CW is -w
         self.turn_sign = 1.0 if self.direction == 'ccw' else -1.0
 
-        # Motion durations (seconds)
         self.t_straight = self.L / self.v
         self.t_turn = (math.pi / 2.0) / self.w
 
-        # State machine tracking: 4 sides, alternating STRAIGHT and TURN
-        # Sequence: [STRAIGHT, TURN] repeated 4 times, then STOP
         self.current_state = 'STRAIGHT'
         self.side_count = 0
         self.state_start_time = None
 
-        # Latest pose storage for CSV logging
         self.latest_odom = None
         self.latest_gt = None
 
-        # ----------------- CSV File Setup -----------------
+        # File Setup
         self.csv_file = open(self.csv_path, mode='w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
         self.csv_writer.writerow([
@@ -51,7 +44,7 @@ class OpenLoopSquare(Node):
             'gt_x', 'gt_y', 'gt_yaw'
         ])
 
-        # ----------------- Subscriptions & Publishers -----------------
+        # Subscriptions and Publishers
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
@@ -92,7 +85,6 @@ class OpenLoopSquare(Node):
     def control_loop(self):
         now = self.get_clock().now()
 
-        # Handle startup delay until valid clock/time arrives
         if now.nanoseconds == 0:
             return
 
